@@ -1,0 +1,27 @@
+stuff.txt sould output a dollar sign [tick]
+
+
+cpu.ram[0x000] = 0x200B # LDA 0x00B -> Load starting char (32)
+cpu.ram[0x001] = 0x300E # STA 0x00E -> Save it to current_char variable (0x00E)
+
+# --- LOOP START ---
+cpu.ram[0x002] = 0x200E # LDA 0x00E -> Load current_char
+cpu.ram[0x003] = 0xC000 # OUT        -> Print it
+
+# Check if we hit the limit
+cpu.ram[0x004] = 0x500D # SUB 0x00D -> Subtract 127. If ACC was 127, ACC becomes 0.
+cpu.ram[0x005] = 0xE00A # JIZ 0x00A -> If it hit 0 (limit reached), jump to HLT (0x00A)
+
+# Increment and loop
+cpu.ram[0x006] = 0x200E # LDA 0x00E -> Reload the clean character code
+cpu.ram[0x007] = 0x400C # ADD 0x00C -> Add 1
+cpu.ram[0x008] = 0x300E # STA 0x00E -> Save the incremented char code back to 0x00E
+cpu.ram[0x009] = 0xF002 # JMP 0x002 -> Jump back to the loop start
+
+cpu.ram[0x00A] = 0x0000 # HLT        -> Halts here when JIZ triggers
+
+# --- DATA REGIONS ---
+cpu.ram[0x00B] = 32     # Starting character (Space)
+cpu.ram[0x00C] = 1      # Increment constant
+cpu.ram[0x00D] = 127    # Limit constant (Delete char)
+cpu.ram[0x00E] = 0      # Variable: current_char
