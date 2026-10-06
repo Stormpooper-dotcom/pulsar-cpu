@@ -1,4 +1,4 @@
-file_to_read = "code.bin"
+file_to_read = input("Enter filepath > ")
 
 with open(file_to_read, "rb") as f:
     bytes_data = f.read()
