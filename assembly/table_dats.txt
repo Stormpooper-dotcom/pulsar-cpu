@@ -1,0 +1,20 @@
+space dat `32
+one dat `1
+max dat `97
+char dat `0
+
+lda space
+sta char
+
+loop lda char
+lda space
+out
+lda char
+out
+add one
+sta char
+sub max
+jiz end
+jmp loop
+
+end hlt

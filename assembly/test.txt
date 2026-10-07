@@ -1,0 +1,4 @@
+character DAT `37
+LDA character
+OUT
+HLT
