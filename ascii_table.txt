@@ -1,19 +1,22 @@
 ldi 020
-sta 00b
+sta 0fb
 ldi 001
-sta 00c
+sta 0fc
 ldi 07f
-sta 00d
+sta 0fd
 ldi 000
-sta 00e
-lda 00b
-sta 00e
-lda 00e
+sta 0fe
+
+lda 0fb
+sta 0fe
+
+lda 0fe
 out 000
-sub 00d
-jiz 013
-lda 00e
-add 00c
-sta 00e
-jmp 008
+sub 0fd
+jiz 012
+lda 0fe
+add 0fc
+sta 0fe
+jmp 00a
+
 hlt 000
