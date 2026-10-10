@@ -1,16 +1,15 @@
-counter DAT `0
-target DAT `10
-one DAT `1
-offset DAT `48
+loopstart:
+    LDA target
+    SUB counter
+    JIZ loopend
+    LDA counter
+    IO 0
+    LDA counter
+    ADD !1
+    STA counter
+    JMP loopstart
+loopend:
+    HRT 0
 
-loopstart LDA target
-SUB counter
-JIZ loopend
-LDA counter
-ADD offset
-OUT
-LDA counter
-ADD one
-STA counter
-JMP loopstart
-loopend HLT
+counter: DAT `0
+target: DAT `10

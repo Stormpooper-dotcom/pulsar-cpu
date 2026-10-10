@@ -3,7 +3,7 @@ An investigation into making my own CPU design. The aim? Build a Forth interpret
 to add:
 - dat system ie variables DONE
 - a way to read numbers in base 10 rather than 16: ` prefix DONE
-- function system, custom call stack
+- function system, custom call stack DONE
 
 then i can make a FORTH INTERPRETER
 
@@ -15,4 +15,5 @@ SPECS:
 shoudl be possibl right?
 
 V1: the CPU + m first attempt at an assembler
-v2: same CPU, assembler now supports denary and dats
+V2: same CPU, assembler now supports denary and dats
+V3: changed instruction set, rewrote assembler from ground up

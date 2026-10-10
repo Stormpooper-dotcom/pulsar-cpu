@@ -1,0 +1,15 @@
+main:
+    IO 2
+    STA number
+
+    CLL double
+
+    IO 0
+    HRT 0
+
+double:
+    LDA number
+    ADD number
+    HRT 1
+
+number: DAT 0

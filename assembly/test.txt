@@ -1,4 +1,10 @@
-character DAT `37
-LDA character
-OUT
-HLT
+; Should output 15
+
+start:
+    LDA my_var
+    ADD !`5
+    STA my_var
+    IO 0
+    HRT 0
+
+my_var: DAT `10

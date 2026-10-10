@@ -1,20 +1,25 @@
-space dat `32
-one dat `1
-max dat `97
-char dat `0
+LDA space
+STA char
 
-lda space
-sta char
+loop:
+    LDA char
+    IO 0
+    LDA space
+    IO 1
+    LDA char
+    IO 1
+    ADD !1
+    STA char
+    LDA space
+    IO 1
+    LDA char
+    SUB max
+    JIZ end
+    JMP loop
 
-loop lda char
-lda space
-out
-lda char
-out
-add one
-sta char
-sub max
-jiz end
-jmp loop
+end:
+    HRT 0
 
-end hlt
+space: DAT `32
+max: DAT `97
+char: DAT `0

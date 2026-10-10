@@ -1,0 +1,31 @@
+start:
+    ; 1. Print the current 'a' value
+    LDA a
+    IO 0            ; Print number in ACC
+    LDA !`32        ; ASCII space character
+    IO 1            ; Print space
+
+    ; Check if 'a' has reached the final safe 12-bit number
+    LDA a
+    SUB !`2584      ; ACC = a - 2584
+    JIZ halt_prog   ; If it equals 0, we are done!
+
+    ; 2. Calculate next Fibonacci number safely
+    LDA a
+    ADD b           ; ACC = a + b
+    STA next
+
+    ; 3. Shift registers forward
+    LDA b
+    STA a
+    LDA next
+    STA b
+
+    JMP start
+
+halt_prog:
+    HRT 0           ; Gracefully halt
+
+a:    DAT 0         
+b:    DAT 1         
+next: DAT 0         

@@ -1,17 +1,15 @@
 class PulsarCPU:
     def __init__(self):
         self.ram = [0x0000]*4096
-        self.acc = 0x0000
+        self.acc = 0x0000 # Accumulator: lda goes here, operations go here
+        self.imm = 0x0000 # Immediator: ldi goes here, transient
+        self.imm_flag = False # False = don't use imm for operation
         self.pc = 0x000
-        self.sp = 0xE10
+        self.sp = 0xFFF # Stack is from 0xFFF to 0xF00 inclusive
         self.running = False
 
-        self.flag_z = 0
-        self.flag_n = 0
-        self.flag_o = 0
-
         self.opcodes = {
-            0x0: self._hlt,
+            0x0: self._hrt,
             0x1: self._ldi,
             0x2: self._lda,
             0x3: self._sta,
@@ -22,8 +20,8 @@ class PulsarCPU:
             0x8: self._or,
             0x9: self._and,
             0xA: self._xor,
-            0xB: self._in,
-            0xC: self._out,
+            0xB: self._io,
+            0xC: self._cll,
             0xD: self._jnz,
             0xE: self._jiz,
             0xF: self._jmp,
@@ -77,86 +75,121 @@ class PulsarCPU:
         return val
 
 
-    def _hlt(self, arg):
-        self.running = False
+    def _hrt(self, arg):
+        if self.sp == 0xFFF or arg == 0: # Returning from the root sequence ie main() ends the program.
+            self.running = False
+        else:
+            self.sp += 1
+            self.pc = self.ram[self.sp]
+            self.ram[self.sp] = 0
 
     def _ldi(self, arg):
-        self.acc = arg
+        self.imm = arg
+        self.imm_flag = True
 
     def _lda(self, arg):
         self.acc = self.ram[arg]
 
     def _sta(self, arg):
-        self.ram[arg] = self.acc
+        if self.imm_flag:
+            self.ram[arg] = self.imm
+            self.imm_flag = False
+        else:
+            self.ram[arg] = self.acc
 
     def _add(self, arg):
-        operand = self.ram[arg]
+        if self.imm_flag:
+            operand = self.imm
+            self.imm_flag = False
+        else:
+            operand = self.ram[arg]
         result = self.acc + operand
-        self.flag_o = int(((self.acc ^ result) & (operand ^ result) & 0x8000) != 0)
         self.acc = result & 0xFFFF
-        self.flag_z = int(self.acc == 0)
-        self.flag_n = int((self.acc & 0x8000) != 0)
 
-    def _sub(self, arg): 
-        operand = self.ram[arg]
+    def _sub(self, arg):
+        if self.imm_flag:
+            operand = self.imm
+            self.imm_flag = False
+        else:
+            operand = self.ram[arg]
         result = self.acc - operand
-        self.flag_o = int(((self.acc ^ operand) & (self.acc ^ result) & 0x8000) != 0)
         self.acc = result & 0xFFFF
-        self.flag_z = int(self.acc == 0)
-        self.flag_n = int((self.acc & 0x8000) != 0)
 
     def _mul(self, arg):
         op1 = self.to_signed(self.acc)
-        op2 = self.to_signed(self.ram[arg])
+        if self.imm_flag:
+            op2 = self.to_signed(self.imm)
+            self.imm_flag = False
+        else:
+            op2 = self.to_signed(self.ram[arg])
         result = op1 * op2
-        self.flag_o = int(result < -32768 or result > 32767)
         self.acc = result & 0xFFFF
-        self.flag_z = int(self.acc == 0)
-        self.flag_n = int((self.acc & 0x8000) != 0)
 
     def _div(self, arg):
-        operand = self.ram[arg]
-        if operand != 0:
-            result = int(self.acc / operand)
-        else: self.running = False; return
+        if self.imm_flag:
+            operand = self.imm
+            self.imm_flag = False
+        else:
+            operand = self.ram[arg]
+            if operand != 0:
+                result = int(self.acc / operand)
+            else: self.running = False; return
         self.acc = result & 0xFFFF
-        self.flag_z = int(self.acc == 0)
-        self.flag_n = int((self.acc & 0x8000) != 0)
 
     def _or(self, arg):
-        self.acc = self.acc | self.ram[arg]
-        self.flag_z = int(self.acc == 0)
-        self.flag_n = int((self.acc & 0x8000) != 0)
+        if self.imm_flag:
+            self.acc = self.acc | self.imm
+            self.imm_flag = False
+        else:
+            self.acc = self.acc | self.ram[arg]
 
     def _and(self, arg):
-        self.acc = self.acc & self.ram[arg]
-        self.flag_z = int(self.acc == 0)
-        self.flag_n = int((self.acc & 0x8000) != 0)
-
-    def _jmp(self, arg): self.pc = arg
+        if self.imm_flag:
+            self.acc = self.acc & self.imm
+            self.imm_flag = False
+        else:
+            self.acc = self.acc & self.ram[arg]
 
     def _xor(self, arg):
-        self.acc = self.acc ^ self.ram[arg]
-        self.flag_z = int(self.acc == 0)
-        self.flag_n = int((self.acc & 0x8000) != 0)
+        if self.imm_flag:
+            self.acc = self.acc ^ self.imm
+            self.imm_flag = False
+        else:
+            self.acc = self.acc ^ self.ram[arg]
 
-    def _in(self, arg):
-        user_input = input("? ")
-        if not user_input: self.acc = 0x00A #('\n')
-        else: self.acc = ord(user_input[0]) & 0xFFFF
-        self.flag_z = int(self.acc == 0)
-        self.flag_n = int((self.acc & 0x8000) != 0)
+    def _io(self, arg):
+        match arg:
+            case 0:
+                print(self.acc, end="")
+            case 1:
+                print(chr(self.acc), end="")
+            case 2:
+                result = int(input("N? "))
+                result = result & 0xFFFF
+                self.acc = result
+            case 3:
+                result = input("C? ")
+                if not result: result = "\n"
+                result = ord(result[0])
+                self.acc = result
 
-    def _out(self, arg):
-        # Not fully implemeted yet
-        char_code = self.acc & 0xFF
-        print(chr(char_code), end="", flush=True)
+    def _cll(self, arg):
+        self.ram[self.sp] = self.pc
+        self.sp -= 1
+        if self.sp < 0xEFF:
+            print("Stack overflow reached!")
+            self.running = False
+            return
+        self.pc = arg
 
     def _jnz(self, arg): 
-        if not self.flag_z: self.pc = arg
-    def _jiz(self, arg):
-        if self.flag_z: self.pc = arg
+        if self.acc != 0: self.pc = arg
 
+    def _jiz(self, arg):
+        if self.acc == 0: self.pc = arg
+
+    def _jmp(self, arg):
+        self.pc = arg
 
 # Test program
 cpu = PulsarCPU()

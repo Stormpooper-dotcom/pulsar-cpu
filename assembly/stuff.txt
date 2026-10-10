@@ -1,6 +1,0 @@
-ldi 10
-sta 11
-ldi 15
-add 11
-out 0
-hlt 0
