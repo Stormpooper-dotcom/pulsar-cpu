@@ -1,0 +1,59 @@
+; Calculator program
+
+main:
+    IO 2
+    STA num1
+    IO 3
+    STA op
+    SUB !`32 ; Space = Quit
+    JIZ end
+    IO 2
+    STA num2
+    CLL checkOp
+    IO 0
+    LDA newline
+    IO 1
+    JMP main
+
+checkOp:
+    LDA op
+    SUB !`43
+    JIZ add
+    LDA op
+    SUB !`45
+    JIZ sub
+    LDA op
+    SUB !`42
+    JIZ mul
+    LDA op
+    SUB !`47
+    JIZ div
+    LDA error
+    IO 1
+    JMP end
+
+add:
+    LDA num1
+    ADD num2
+    HRT 1
+sub:
+    LDA num1
+    SUB num2
+    HRT 1
+mul:
+    LDA num1
+    MUL num2
+    HRT 1
+div:
+    LDA num1
+    DIV num2
+    HRT 1
+
+end:
+    HRT 0
+
+num1: DAT 0
+num2: DAT 0
+op: DAT 0
+newline: DAT `10
+error: DAT `33
